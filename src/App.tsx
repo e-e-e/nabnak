@@ -1,26 +1,58 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { ArenaClient } from './services/arenaService';
+import { Page } from './components/page/page';
+import { Channel } from './components/channel/channel';
+import { Board } from './components/board/board';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { HomeView } from './views/Home';
+import { BoardView } from './views/Board';
+import { RecoilRoot } from 'recoil/dist';
+import { installChannelState } from './state/state';
+import { AuthClient } from './services/authService';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export const installApp = () => {
+  // TODO: sort out authentication
+  const token = window.localStorage.getItem('token');
+  if (!token) {
+    const APP_TOKEN = process.env.REACT_APP_ARENA_APP_ID;
+    const APP_SECRET = process.env.REACT_APP_ARENA_APP_SECRET;
+    const AUTH_REDIRECT = process.env.REACT_APP_ARENA_APP_SECRETv;
+    if (APP_TOKEN && APP_SECRET && AUTH_REDIRECT) {
+      const authClient = new AuthClient(APP_TOKEN, APP_SECRET, AUTH_REDIRECT);
+      const match = window.location.search.match(/\?code=(\w+)/);
+      const code = match && match[1];
+      if (!code) {
+        authClient.login();
+      } else {
+        authClient.authorise(code).then(console.log);
+      }
+      return;
+    }
+  }
 
-export default App;
+  const arenaClient = new ArenaClient({
+    token,
+  });
+
+  const channelState = installChannelState(arenaClient);
+
+  const App = () => {
+    return (
+      <RecoilRoot>
+        <Page>
+          <Router>
+            <Switch>
+              <Route path="/:channelId">
+                <BoardView state={channelState} />
+              </Route>
+              <Route path="/">
+                <HomeView state={channelState} />
+              </Route>
+            </Switch>
+          </Router>
+        </Page>
+      </RecoilRoot>
+    );
+  };
+  return App;
+};
