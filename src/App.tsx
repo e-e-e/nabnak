@@ -16,7 +16,7 @@ export const installApp = () => {
   if (!token) {
     const APP_TOKEN = process.env.REACT_APP_ARENA_APP_ID;
     const APP_SECRET = process.env.REACT_APP_ARENA_APP_SECRET;
-    const AUTH_REDIRECT = process.env.REACT_APP_ARENA_APP_SECRETv;
+    const AUTH_REDIRECT = process.env.REACT_APP_ARENA_APP_REDIRECT;
     if (APP_TOKEN && APP_SECRET && AUTH_REDIRECT) {
       const authClient = new AuthClient(APP_TOKEN, APP_SECRET, AUTH_REDIRECT);
       const match = window.location.search.match(/\?code=(\w+)/);
